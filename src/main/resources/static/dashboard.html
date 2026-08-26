@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GHMC Governance Portal — Dashboard</title>
+  <link rel="stylesheet" href="/css/ghmc-theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Official Header Banner -->
+  <header class="ghmc-header">
+    <div class="header-container">
+      
+      <!-- LEFT: Logo (name) -->
+      <a href="/dashboard.html" class="brand-wrapper">
+        <img src="/images/ghmc-logo.png" alt="GHMC Official Emblem" class="brand-logo-img">
+        <div class="brand-title">
+          <h1>Greater Hyderabad Municipal Corporation</h1>
+          <p>Government of Telangana — Civic Governance Portal</p>
+        </div>
+      </a>
+
+      <!-- MIDDLE: Active Tenant & Scope: underneath -->
+      <div class="header-tenant-center">
+        <div class="tenant-select-row">
+          <span>Active Tenant:</span>
+          <select id="dashZoneSelect" class="zone-select-header" onchange="onZoneSwitch()"></select>
+        </div>
+        <div class="tenant-scope-row">
+          Scope: <strong id="dashZoneBadge">KHAIRATABAD</strong>
+        </div>
+      </div>
+
+      <!-- RIGHT: Username & Role (stacked) -->
+      <div class="user-header-right">
+        <div class="user-details-stacked">
+          <strong id="userFullNameDisplay">User Name</strong>
+          <span id="userRoleDisplay" class="badge role-badge">ROLE</span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Dashboard Body Wrapper with Working Sidebar Navigation -->
+  <div class="portal-body-wrapper">
+    
+    <!-- LEFT SIDEBAR MENU (Static Navigation & Bottom Logout Button) -->
+    <aside class="portal-sidebar">
+      <div>
+        <div class="sidebar-menu-title">NAVIGATION MENU</div>
+        <ul class="sidebar-nav">
+          <li id="nav-overview" class="active"><a href="#" onclick="switchSidebarTab(event, 'overview')">📊 Overview & Dashboard</a></li>
+          <li id="nav-recent"><a href="#" onclick="switchSidebarTab(event, 'recent')">📋 Zonal Recent Activity</a></li>
+          <li id="nav-notifications"><a href="#" onclick="switchSidebarTab(event, 'notifications')">🔔 Notifications <span id="notifBadgeCount" class="badge" style="background:var(--ghmc-saffron); color:var(--ghmc-navy-dark); font-size:0.7rem; margin-left:0.3rem; display:none;">0</span></a></li>
+          <li id="nav-new"><a href="#" onclick="switchSidebarTab(event, 'new')">📝 New Grievance</a></li>
+          <li id="nav-analytics"><a href="#" onclick="switchSidebarTab(event, 'analytics')">📈 Zone Analytics</a></li>
+          <li id="nav-profile"><a href="#" onclick="switchSidebarTab(event, 'profile')">👤 My Profile</a></li>
+          <li id="nav-my-recent" style="display: none;"><a href="#" onclick="switchSidebarTab(event, 'my-recent')">📂 My Recent Activities</a></li>
+        </ul>
+
+      </div>
+
+      <!-- Logout Button at Bottom of Navigation Sidebar -->
+      <div class="sidebar-logout-footer">
+        <button class="btn btn-danger-sidebar" onclick="handleLogout()">
+          🚪 Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA (DYNAMIC TAB PANELS) -->
+    <main class="portal-main-content">
+      
+      <!-- 1. OVERVIEW & WIREFRAME DASHBOARD VIEW (Default) -->
+      <div id="tab-panel-overview" class="tab-panel">
+        
+        <!-- 2 MAIN CARDS SIDE-BY-SIDE (Recent Activity Left - WIDER & CONTAINS METRICS, New Grievance Right) -->
+        <div class="dashboard-two-columns">
+          
+          <!-- CARD 1 (LEFT): Recent Activity Box (Fills Left Area Generously) -->
+          <div class="card content-box left-activity-box">
+            <div class="card-title">
+              <span>📋 Recent Activity (<span class="activeZoneLabel">KHAIRATABAD</span>)</span>
+              <button class="btn btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="loadDashboardGrievances()">Refresh</button>
+            </div>
+
+            <!-- Summary Metric Buttons Inside Left Box -->
+            <div class="metrics-grid-compact">
+              <div class="metric-card saffron compact">
+                <div class="metric-label">Total Zone Complaints</div>
+                <div id="dashTotalCount" class="metric-number">0</div>
+              </div>
+              <div class="metric-card blue compact">
+                <div class="metric-label">Open / Submitted</div>
+                <div id="dashSubmittedCount" class="metric-number">0</div>
+              </div>
+              <div class="metric-card saffron compact">
+                <div class="metric-label">In Progress</div>
+                <div id="dashInProgressCount" class="metric-number">0</div>
+              </div>
+              <div class="metric-card green compact">
+                <div class="metric-label">Resolved</div>
+                <div id="dashResolvedCount" class="metric-number">0</div>
+              </div>
+            </div>
+
+            <!-- Grievance Activity List -->
+            <div id="recentActivityFeed"></div>
+          </div>
+
+          <!-- CARD 2 (RIGHT): New Grievance -->
+          <div class="card content-box" id="newGrievanceCard">
+            <div class="card-title"><span>📝 New Grievance</span></div>
+            
+            <!-- Citizen Grievance Filing Form -->
+            <div id="citizenFormPanel">
+              <form onsubmit="handleCitizenSubmitGrievance(event)">
+                <div class="form-group">
+                  <label>Grievance Title</label>
+                  <input type="text" id="citizenGrvTitle" class="form-control" placeholder="e.g. Waterlogging near Metro" required>
+                </div>
+                <div class="form-group">
+                  <label>Category</label>
+                  <select id="citizenGrvCategory" class="form-control" required>
+                    <option value="ROADS">Roads & Potholes</option>
+                    <option value="SANITATION">Sanitation & Garbage</option>
+                    <option value="ELECTRICAL">Streetlights & Power</option>
+                    <option value="DRAINAGE">Drainage & Flood Control</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Location Landmark</label>
+                  <input type="text" id="citizenGrvLocation" class="form-control" placeholder="Road No 12, Banjara Hills" required>
+                </div>
+                <div class="form-group">
+                  <label>Assigned Ward Member Jurisdiction</label>
+                  <select id="citizenGrvWard" class="form-control" required>
+                    <option value="Ward 91">Ward 91 - Khairatabad Central</option>
+                    <option value="Ward 92">Ward 92 - Jubilee Hills North</option>
+                    <option value="Ward 93">Ward 93 - Banjara Hills East</option>
+                    <option value="Ward 94" selected>Ward 94 - Banjara Hills Road 12</option>
+                    <option value="Ward 95">Ward 95 - Somajiguda Circle</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <label style="margin-bottom: 0;">Description</label>
+                    <button type="button" class="btn btn-outline" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; color: var(--ghmc-navy); font-weight: 700;" onclick="triggerAiFormCategorize(1)">✨ Gemini AI Auto-Categorize</button>
+                  </div>
+                  <textarea id="citizenGrvDescription" class="form-control" rows="2" placeholder="Describe the civic issue..." required></textarea>
+                </div>
+                <div id="aiAnalysisResultBox1" style="display: none; padding: 0.65rem; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 6px; margin-bottom: 0.85rem; font-size: 0.78rem;">
+                  <strong style="color: #166534;">🤖 Gemini AI Priority Assessment:</strong>
+                  <div id="aiAnalysisText1" style="margin-top: 0.2rem; color: #15803D;"></div>
+                </div>
+                <button type="submit" class="btn btn-saffron" style="width: 100%;">Submit Grievance</button>
+              </form>
+            </div>
+
+            <!-- Official Oversight Panel -->
+            <div id="officialInfoPanel" style="display: none;">
+              <div style="padding: 1.5rem; background: #F8FAFC; border-radius: 8px; border: 1px solid var(--ghmc-border); text-align: center;">
+                <p style="font-size: 1.6rem; margin-bottom: 0.4rem;">🛠️</p>
+                <strong style="color: var(--ghmc-navy); font-size: 0.95rem;">Official Oversight Mode</strong>
+                <p style="font-size: 0.82rem; color: var(--ghmc-text-muted); margin-top: 0.4rem;">
+                  Select any complaint under <strong>Recent Activity</strong> to review and update its status.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- 2. RECENT ACTIVITY DEDICATED FULL TAB PANEL -->
+      <div id="tab-panel-recent" class="tab-panel" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>📋 Full Recent Activity Log (<span class="activeZoneLabel">KHAIRATABAD</span> Zone)</span>
+            <button class="btn btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="loadDashboardGrievances()">Refresh Activity</button>
+          </div>
+          <div id="fullRecentActivityList"></div>
+        </div>
+      </div>
+
+      <!-- 3. NEW GRIEVANCE DEDICATED TAB PANEL -->
+      <div id="tab-panel-new" class="tab-panel" style="display: none;">
+        <div class="card" style="max-width: 680px; margin: 0 auto;">
+          <div class="card-title"><span>📝 Submit Civic Grievance (<span class="activeZoneLabel">KHAIRATABAD</span> Zone)</span></div>
+          <form onsubmit="handleCitizenSubmitGrievance(event)">
+            <div class="form-group">
+              <label>Grievance Title</label>
+              <input type="text" id="citizenGrvTitle2" class="form-control" placeholder="e.g. Overflowing garbage bin" required>
+            </div>
+            <div class="grid-2col">
+              <div class="form-group">
+                <label>Category</label>
+                <select id="citizenGrvCategory2" class="form-control" required>
+                  <option value="ROADS">Roads & Potholes</option>
+                  <option value="SANITATION">Sanitation & Garbage</option>
+                  <option value="ELECTRICAL">Streetlights & Power</option>
+                  <option value="DRAINAGE">Drainage & Flood Control</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Assigned Ward Member Jurisdiction</label>
+                <select id="citizenGrvWard2" class="form-control" required>
+                  <option value="Ward 91">Ward 91 - Khairatabad Central</option>
+                  <option value="Ward 92">Ward 92 - Jubilee Hills North</option>
+                  <option value="Ward 93">Ward 93 - Banjara Hills East</option>
+                  <option value="Ward 94" selected>Ward 94 - Banjara Hills Road 12</option>
+                  <option value="Ward 95">Ward 95 - Somajiguda Circle</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Location Landmark</label>
+              <input type="text" id="citizenGrvLocation2" class="form-control" placeholder="Road No 12, Banjara Hills" required>
+            </div>
+            <div class="form-group">
+              <label>Detailed Description</label>
+              <textarea id="citizenGrvDescription2" class="form-control" rows="4" placeholder="Provide complete details about the civic problem..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-saffron" style="width: 100%;">Submit Grievance to Zone</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- 3.5 NOTIFICATIONS DEDICATED TAB PANEL -->
+      <div id="tab-panel-notifications" class="tab-panel" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>🔔 Notifications & Real-Time Alerts (<span class="activeZoneLabel">KHAIRATABAD</span> Zone)</span>
+            <button class="btn btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="loadNotificationHistory()">Refresh Notifications</button>
+          </div>
+          <div id="notificationFeedList"></div>
+        </div>
+      </div>
+
+      <!-- 3.6 MY RECENT ACTIVITIES TAB PANEL -->
+      <div id="tab-panel-my-recent" class="tab-panel" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>📂 My Recent Activities (Issues Submitted by Logged-In Citizen)</span>
+            <button class="btn btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="loadMyGrievances()">Refresh My Activities</button>
+          </div>
+          <div id="myRecentActivityList"></div>
+        </div>
+      </div>
+
+      <!-- 4. ZONE ANALYTICS TAB PANEL -->
+      <div id="tab-panel-analytics" class="tab-panel" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>📈 GHMC Analytics & Civic Reports</span>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button class="btn btn-saffron" style="padding: 0.25rem 0.65rem; font-size: 0.78rem;" onclick="generateAiExecutiveSummary()">🤖 Generate AI Zone Summary</button>
+              <div id="superAdminReportToggle" style="display: none; gap: 0.5rem;">
+                <button id="btnCombinedReport" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;" onclick="loadCombinedAnalyticsReport()">Combined All-Zones Report</button>
+                <select id="superAdminZoneSelector" class="form-control" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem;" onchange="loadSelectedZoneReport()"></select>
+              </div>
+            </div>
+          </div>
+          <div id="aiExecutiveReportBox" style="display: none; padding: 1rem 1.25rem; background: #F8FAFC; border: 1px solid var(--ghmc-border); border-radius: 8px; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <strong style="color: var(--ghmc-navy); font-size: 0.9rem;">🤖 Google Gemini 1.5 Flash - Executive AI Report</strong>
+              <span id="aiReportBadge" class="badge" style="background:#E2E8F0; color:var(--ghmc-navy);">Gemini AI Analysis</span>
+            </div>
+            <div id="aiExecutiveReportContent" style="font-size: 0.88rem; line-height: 1.5; color: var(--ghmc-text-dark); white-space: pre-line;"></div>
+          </div>
+          
+          <div class="metrics-grid" style="margin-top: 1rem;">
+            <div class="metric-card">
+              <div style="font-size: 0.82rem; color: var(--ghmc-text-muted);">Total Grievances</div>
+              <div id="analyticsTotalCount" class="metric-number">0</div>
+            </div>
+            <div class="metric-card saffron">
+              <div style="font-size: 0.82rem; color: var(--ghmc-text-muted);">Open / Pending</div>
+              <div id="analyticsOpenCount" class="metric-number">0</div>
+            </div>
+            <div class="metric-card green">
+              <div style="font-size: 0.82rem; color: var(--ghmc-text-muted);">Resolved</div>
+              <div id="analyticsResolvedCount" class="metric-number">0</div>
+            </div>
+            <div class="metric-card blue">
+              <div style="font-size: 0.82rem; color: var(--ghmc-text-muted);">Resolution Efficiency</div>
+              <div id="analyticsResolutionRate" class="metric-number">100%</div>
+            </div>
+          </div>
+
+          <!-- Zone Quick Selector Buttons for Super Admin -->
+          <div id="zoneReportButtonsContainer" style="display: none; margin-top: 1.25rem; padding: 1rem; background: #F8FAFC; border-radius: 8px; border: 1px solid var(--ghmc-border);">
+            <div style="font-size: 0.85rem; font-weight: 700; color: var(--ghmc-navy); margin-bottom: 0.75rem;">Inspect Individual Zone Report:</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.75rem;" onclick="inspectZoneReport('KHAIRATABAD')">Khairatabad</button>
+              <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.75rem;" onclick="inspectZoneReport('SECUNDERABAD')">Secunderabad</button>
+              <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.75rem;" onclick="inspectZoneReport('CHARMINAR')">Charminar</button>
+              <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.75rem;" onclick="inspectZoneReport('SERILINGAMPALLY')">Serilingampally</button>
+              <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.75rem;" onclick="inspectZoneReport('KUKATPALLY')">Kukatpally</button>
+              <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.75rem;" onclick="inspectZoneReport('LB_NAGAR')">LB Nagar</button>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem; padding: 1.25rem; background: #F8FAFC; border-radius: 8px; border: 1px solid var(--ghmc-border);">
+            <strong style="color: var(--ghmc-navy); font-size: 0.95rem;">Category Distribution Analysis (<span id="analyticsZoneReportTitle">KHAIRATABAD Zone</span>)</strong>
+            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.25rem;">
+                  <span>🚧 Roads & Potholes</span>
+                  <strong>40%</strong>
+                </div>
+                <div style="height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden;">
+                  <div style="width: 40%; height: 100%; background: var(--ghmc-navy);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.25rem;">
+                  <span>🧹 Sanitation & Garbage</span>
+                  <strong>30%</strong>
+                </div>
+                <div style="height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden;">
+                  <div style="width: 30%; height: 100%; background: var(--ghmc-saffron);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.25rem;">
+                  <span>💡 Streetlights & Electrical</span>
+                  <strong>20%</strong>
+                </div>
+                <div style="height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden;">
+                  <div style="width: 20%; height: 100%; background: var(--ghmc-blue);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.25rem;">
+                  <span>💧 Drainage & Flood Control</span>
+                  <strong>10%</strong>
+                </div>
+                <div style="height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden;">
+                  <div style="width: 10%; height: 100%; background: var(--ghmc-green);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. MY PROFILE TAB PANEL (Zero-Scroll Section) -->
+      <div id="tab-panel-profile" class="tab-panel" style="display: none;">
+        <div class="profile-viewport-wrapper">
+          <div class="card profile-card-compact">
+            <div class="card-title"><span>👤 User Profile & Account Details</span></div>
+            
+            <div class="profile-header-row">
+              <div class="profile-avatar-circle">
+                <span id="profileAvatar">U</span>
+              </div>
+              <div>
+                <h3 id="profileFullName" class="profile-name-text">User Name</h3>
+                <span id="profileRoleBadge" class="badge role-badge">ROLE</span>
+              </div>
+            </div>
+
+            <div class="profile-details-list">
+              <div class="profile-detail-row">
+                <span class="profile-label">Email Address:</span>
+                <strong id="profileEmail">user@gmail.com</strong>
+              </div>
+              <div class="profile-detail-row">
+                <span class="profile-label">Assigned Zone:</span>
+                <strong id="profileZone">Khairatabad Zone (KHAIRATABAD)</strong>
+              </div>
+              <div class="profile-detail-row">
+                <span class="profile-label">Authentication Type:</span>
+                <strong id="profileAuthType">JWT / Session Token</strong>
+              </div>
+              <div class="profile-detail-row">
+                <span class="profile-label">Account Status:</span>
+                <span class="badge badge-resolved">ACTIVE & VERIFIED</span>
+              </div>
+            </div>
+
+            <div class="profile-footer-action">
+              <button class="btn btn-danger" onclick="handleLogout()">Sign Out of Account</button>
+            </div>
+          </div>
+
+          <!-- Profile Section Footer (Visible on screen without scrolling) -->
+          <footer class="profile-section-footer">
+            &copy; 2026 Greater Hyderabad Municipal Corporation (GHMC). All Rights Reserved. Govt of Telangana.
+          </footer>
+        </div>
+      </div>
+
+      <!-- 6. MY RECENT ACTIVITIES TAB PANEL (For Citizens) -->
+      <div id="tab-panel-my-recent" class="tab-panel" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>📂 My Reported Grievances & Status History</span>
+            <button class="btn btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="loadDashboardGrievances()">Refresh My Activities</button>
+          </div>
+      <!-- 7. NOTIFICATIONS DEDICATED TAB PANEL -->
+      <div id="tab-panel-notifications" class="tab-panel" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>🔔 Real-Time Notifications & System Alerts</span>
+            <button class="btn btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="loadNotificationHistory()">Refresh Notifications</button>
+          </div>
+          <div id="notificationFeedList"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- COMPLETE GRIEVANCE DETAILS MODAL -->
+  <div id="grievanceDetailModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalGrievanceTitle" style="font-size: 1.1rem; color: var(--ghmc-navy);">Grievance Details</h3>
+        <span class="modal-close-btn" onclick="closeGrievanceModal()">✕</span>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span id="modalGrievanceId" class="badge" style="background: #EDF2F7; color: var(--ghmc-navy);">ID: grv-1234</span>
+          <span id="modalGrievanceStatus" class="badge badge-submitted">SUBMITTED</span>
+        </div>
+
+        <div class="modal-field">
+          <label>Category</label>
+          <div id="modalGrievanceCategory" class="modal-value">ROADS</div>
+        </div>
+
+        <div class="modal-field">
+          <label>Location Landmark & Ward</label>
+          <div id="modalGrievanceLocation" class="modal-value">Road No 12, Banjara Hills (Ward 94)</div>
+        </div>
+
+        <div class="modal-field">
+          <label>Assigned Zone Jurisdiction</label>
+          <div id="modalGrievanceZone" class="modal-value">Khairatabad Zone (KHAIRATABAD)</div>
+        </div>
+
+        <div class="modal-field">
+          <label>Detailed Description</label>
+          <div id="modalGrievanceDescription" class="modal-value-box">Provide complete details about civic problem...</div>
+        </div>
+
+        <div class="modal-field">
+          <label>Citizen Reporter Info</label>
+          <div id="modalGrievanceCitizen" class="modal-value">Ramesh Kumar (citizen.ravi@gmail.com)</div>
+        </div>
+
+        <!-- Status Action Controls for Ward Inspector -->
+        <div id="modalInspectorActions" style="display: none; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--ghmc-border);">
+          <label style="font-size: 0.85rem; font-weight: 700; color: var(--ghmc-navy); display: block; margin-bottom: 0.5rem;">Update Status (Ward Inspector RBAC):</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-outline" style="flex: 1; padding: 0.4rem; font-size: 0.82rem;" onclick="updateModalGrievanceStatus('IN_PROGRESS')">In Progress</button>
+            <button class="btn btn-saffron" style="flex: 1; padding: 0.4rem; font-size: 0.82rem;" onclick="updateModalGrievanceStatus('RESOLVED')">Resolved</button>
+            <button class="btn btn-danger" style="flex: 1; padding: 0.4rem; font-size: 0.82rem;" onclick="updateModalGrievanceStatus('REJECTED')">Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating AI Assistant Launcher Button -->
+  <button class="ai-chat-launcher" onclick="toggleAiChatWidget()" title="Chat with GHMC Gemini AI Assistant">
+    <span>🤖</span>
+    <span class="ai-launcher-text">GHMC Gemini AI</span>
+  </button>
+
+  <!-- AI Chatbot Modal Window -->
+  <div id="aiChatWidgetModal" class="ai-chat-card" style="display: none;">
+    <div class="ai-chat-header">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.2rem;">🤖</span>
+        <div>
+          <strong style="font-size: 0.9rem; display: block;">GHMC Gemini AI Assist</strong>
+          <span style="font-size: 0.72rem; color: #94A3B8;">Powered by Google Gemini 1.5 Flash</span>
+        </div>
+      </div>
+      <span class="modal-close-btn" onclick="toggleAiChatWidget()">&times;</span>
+    </div>
+    <div id="aiChatMessagesList" class="ai-chat-body">
+      <div class="ai-msg">
+        👋 Hi! I am your <strong>GHMC Gemini AI Assistant</strong>. Ask me anything about civic grievance status, helpline numbers, ward members, or filing guidance!
+      </div>
+    </div>
+    <div class="ai-chat-footer">
+      <input type="text" id="aiChatInput" class="form-control" placeholder="Ask Gemini AI a question..." onkeypress="handleAiChatKeyPress(event)">
+      <button class="btn btn-primary" style="padding: 0.45rem 0.85rem;" onclick="submitAiChatMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="ghmc-footer">
+    &copy; 2026 Greater Hyderabad Municipal Corporation (GHMC). All Rights Reserved. Govt of Telangana.
+  </footer>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

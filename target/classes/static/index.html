@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GHMC Governance Portal — Sign In</title>
+  <link rel="stylesheet" href="/css/ghmc-theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="split-landing-bg">
+
+  <!-- 2-Column Split Landing Container -->
+  <div class="landing-container">
+    
+    <!-- LEFT SIDE: Branding, Logo, Title & Information -->
+    <div class="landing-left-branding">
+      <div class="large-emblem-wrapper">
+        <img src="/images/ghmc-logo.png" alt="GHMC Official Emblem" class="landing-logo-img">
+      </div>
+      
+      <h1 class="landing-title">Greater Hyderabad<br>Municipal Corporation</h1>
+      <p class="landing-subtitle">Government of Telangana — Civic Governance & Grievance Portal</p>
+
+      <div class="landing-features-list">
+        <div class="feature-item">
+          <span class="feature-icon">🏛️</span>
+          <div>
+            <strong>Multi-Tenant Zone Isolation</strong>
+            <p>Scoped data access across Khairatabad, Secunderabad, Serilingampally & Charminar.</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">🛡️</span>
+          <div>
+            <strong>Role-Based Access Control (RBAC)</strong>
+            <p>Customized portals for Citizens, Ward Inspectors, Zonal Commissioners & Municipal Commissioner.</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">📞</span>
+          <div>
+            <strong>24x7 Toll Free Helpline</strong>
+            <p>040-21111111 / 155304 — Emergency Control Room active round the clock.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE: Login & Registration Portal Card -->
+    <div class="landing-right-auth">
+      <div class="auth-card">
+        
+        <!-- Tab Headers -->
+        <div class="auth-tabs">
+          <button id="signInTabBtn" class="auth-tab-btn active" onclick="switchAuthTab('signin')">Sign In</button>
+          <button id="registerTabBtn" class="auth-tab-btn" onclick="switchAuthTab('register')">Register New User</button>
+        </div>
+
+        <div class="auth-body">
+          
+          <!-- 1. SIGN IN FORM -->
+          <div id="signInFormPanel">
+            <form onsubmit="handleSignIn(event)">
+              
+              <div class="form-group">
+                <label>Sign In As (Role)</label>
+                <select id="loginRoleSelect" class="form-control" onchange="onRoleChange()">
+                  <option value="ROLE_CITIZEN">👤 Citizen (JWT Auth)</option>
+                  <option value="ROLE_WARD_INSPECTOR">🛠️ Ward Inspector (Session Auth)</option>
+                  <option value="ROLE_ZONAL_COMMISSIONER">👔 Zonal Commissioner (Session Auth)</option>
+                  <option value="ROLE_MUNICIPAL_COMMISSIONER">👑 Municipal Commissioner (Session Auth)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Select GHMC Zone (Tenant Scope)</label>
+                <select id="loginZoneSelect" class="form-control"></select>
+              </div>
+
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="loginEmail" class="form-control" value="citizen.ravi@gmail.com" required>
+              </div>
+
+              <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" class="form-control" value="ghmc123" required>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Sign In to Portal</button>
+            </form>
+
+            <!-- Quick Demo Login Chips -->
+            <div style="margin-top: 1.2rem; padding-top: 0.85rem; border-top: 1px solid var(--ghmc-border);">
+              <p style="font-size: 0.78rem; font-weight: 700; color: var(--ghmc-text-muted); margin-bottom: 0.4rem;">⚡ Quick One-Click Demo Accounts:</p>
+              <div class="chip-container">
+                <span class="chip" title="Resident Citizen" onclick="quickFill('ROLE_CITIZEN', 'citizen.ravi@gmail.com', 'KHAIRATABAD')">👤 Citizen</span>
+                <span class="chip" title="Inspector Ward 91" onclick="quickFill('ROLE_WARD_INSPECTOR', 'inspector.ward91@ghmc.gov.in', 'KHAIRATABAD')">🛠️ IW-91</span>
+                <span class="chip" title="Inspector Ward 92" onclick="quickFill('ROLE_WARD_INSPECTOR', 'inspector.ward92@ghmc.gov.in', 'KHAIRATABAD')">🛠️ IW-92</span>
+                <span class="chip" title="Inspector Ward 93" onclick="quickFill('ROLE_WARD_INSPECTOR', 'inspector.ward93@ghmc.gov.in', 'KHAIRATABAD')">🛠️ IW-93</span>
+                <span class="chip" title="Inspector Ward 94" onclick="quickFill('ROLE_WARD_INSPECTOR', 'inspector.ward94@ghmc.gov.in', 'KHAIRATABAD')">🛠️ IW-94</span>
+                <span class="chip" title="Inspector Ward 95" onclick="quickFill('ROLE_WARD_INSPECTOR', 'inspector.ward95@ghmc.gov.in', 'KHAIRATABAD')">🛠️ IW-95</span>
+                <span class="chip" title="Zonal Commissioner" onclick="quickFill('ROLE_ZONAL_COMMISSIONER', 'zonal.khairatabad@ghmc.gov.in', 'KHAIRATABAD')">👔 ZC</span>
+                <span class="chip" title="Super Admin (Municipal Commissioner)" onclick="quickFill('ROLE_MUNICIPAL_COMMISSIONER', 'commissioner@ghmc.gov.in', 'KHAIRATABAD')">👑 SA</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. REGISTER USER FORM -->
+          <div id="registerFormPanel" style="display: none;">
+            <form onsubmit="handleRegister(event)">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="regFullName" class="form-control" placeholder="e.g. Ramesh Chandra" required>
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="regEmail" class="form-control" placeholder="ramesh@gmail.com" required>
+              </div>
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" id="regPhone" class="form-control" placeholder="+91-9876543210" required>
+              </div>
+              <div class="form-group">
+                <label>Select Home GHMC Zone</label>
+                <select id="regZoneSelect" class="form-control"></select>
+              </div>
+              <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required>
+              </div>
+              <button type="submit" class="btn btn-saffron" style="width: 100%;">Register as Citizen</button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Compact Non-Scrolling Footer -->
+  <footer class="ghmc-footer" style="padding: 0.5rem 1rem; font-size: 0.75rem; background: rgba(0,0,0,0.25); border: none; margin-top: 0;">
+    &copy; 2026 Greater Hyderabad Municipal Corporation (GHMC). All Rights Reserved. Govt of Telangana.
+  </footer>
+
+  <script src="/js/auth.js"></script>
+</body>
+</html>
