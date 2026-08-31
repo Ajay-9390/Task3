@@ -1,0 +1,32 @@
+# Secrets & Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Node.js Dependencies
+node_modules/
+package-lock.json
+
+# Build Outputs & Compiled Code
+dist/
+target/
+build/
+
+# Database & Storage Files
+prisma/dev.db
+prisma/dev.db-journal
+*.db
+*.sqlite
+*.sqlite3
+
+# User Media Uploads (Ignore uploaded images except .gitkeep)
+src/main/resources/static/uploads/*
+!src/main/resources/static/uploads/.gitkeep
+
+# IDE, OS & System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+.gemini/
