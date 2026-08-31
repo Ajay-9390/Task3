@@ -233,6 +233,22 @@ function renderGrievanceFeedHtml(grievances) {
         <span class="badge badge-${g.status.toLowerCase()}">${g.status}</span>
       </div>
       <p style="font-size: 0.88rem; color: #4A5568; margin-bottom: 0.4rem;">${g.description}</p>
+      ${(g.beforePhotoUrl || g.afterPhotoUrl) ? `
+        <div style="display: flex; gap: 0.6rem; margin-bottom: 0.5rem;" onclick="event.stopPropagation();">
+          ${g.beforePhotoUrl ? `
+            <div style="position: relative; cursor: pointer;" onclick="openGrievanceModal('${g.id}')">
+              <img src="${g.beforePhotoUrl}" style="width: 75px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #CBD5E0;">
+              <span style="position: absolute; bottom: 2px; left: 2px; background: rgba(0,0,0,0.7); color: #FFF; font-size: 0.6rem; padding: 1px 4px; border-radius: 2px;">📷 Before</span>
+            </div>
+          ` : ''}
+          ${g.afterPhotoUrl ? `
+            <div style="position: relative; cursor: pointer;" onclick="openGrievanceModal('${g.id}')">
+              <img src="${g.afterPhotoUrl}" style="width: 75px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #38A169;">
+              <span style="position: absolute; bottom: 2px; left: 2px; background: #276749; color: #FFF; font-size: 0.6rem; padding: 1px 4px; border-radius: 2px;">✅ After Proof</span>
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
       <div class="grievance-meta">
         📍 ${g.location} | Ward: ${g.wardNo} | Category: <strong>${g.category}</strong>
       </div>
@@ -282,6 +298,48 @@ function openGrievanceModal(id) {
   if (citizenEl) {
     citizenEl.innerText = grievance.citizen ? `${grievance.citizen.fullName} (${grievance.citizen.email})` : 'Registered Citizen';
   }
+
+  // Populate Photos
+  const beforeCard = document.getElementById('beforePhotoCard');
+  const beforeImg = document.getElementById('modalBeforePhotoImg');
+  const beforeLink = document.getElementById('modalBeforePhotoLink');
+
+  const afterCard = document.getElementById('afterPhotoCard');
+  const afterImg = document.getElementById('modalAfterPhotoImg');
+  const afterLink = document.getElementById('modalAfterPhotoLink');
+  const noPhotosMsg = document.getElementById('noPhotosMsg');
+
+  let hasPhotos = false;
+
+  if (beforeCard && beforeImg && beforeLink) {
+    if (grievance.beforePhotoUrl) {
+      beforeImg.src = grievance.beforePhotoUrl;
+      beforeLink.href = grievance.beforePhotoUrl;
+      beforeCard.style.display = 'block';
+      hasPhotos = true;
+    } else {
+      beforeCard.style.display = 'none';
+    }
+  }
+
+  if (afterCard && afterImg && afterLink) {
+    if (grievance.afterPhotoUrl) {
+      afterImg.src = grievance.afterPhotoUrl;
+      afterLink.href = grievance.afterPhotoUrl;
+      afterCard.style.display = 'block';
+      hasPhotos = true;
+    } else {
+      afterCard.style.display = 'none';
+    }
+  }
+
+  if (noPhotosMsg) {
+    noPhotosMsg.style.display = hasPhotos ? 'none' : 'block';
+  }
+
+  // Reset Inspector Proof File Input
+  const proofInput = document.getElementById('inspectorProofPhotoInput');
+  if (proofInput) proofInput.value = '';
 
   // Show status update controls ONLY for Ward Inspectors
   if (actionsEl) {
@@ -342,8 +400,29 @@ function showToast(message, type = 'info', title = '') {
   }, 3500);
 }
 
+// Upload helper for photo attachments
+async function uploadPhotoFile(inputEl) {
+  if (!inputEl || !inputEl.files || inputEl.files.length === 0) {
+    return null;
+  }
+  const formData = new FormData();
+  formData.append('file', inputEl.files[0]);
+
+  const res = await fetch(`${API_BASE}/grievances/upload`, {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to upload photo file');
+  }
+
+  const data = await res.json();
+  return data.url;
+}
+
 // Submit Grievance Handlers
-function handleCitizenSubmitGrievance(e) {
+async function handleCitizenSubmitGrievance(e) {
   e.preventDefault();
   const jwt = localStorage.getItem('ghmc_jwt');
   if (!jwt) {
@@ -358,66 +437,77 @@ function handleCitizenSubmitGrievance(e) {
   const wardNo = document.getElementById('citizenGrvWard')?.value || document.getElementById('citizenGrvWard2')?.value;
   const description = document.getElementById('citizenGrvDescription')?.value || document.getElementById('citizenGrvDescription2')?.value;
 
-  const payload = { title, category, location, wardNo, description, zoneCode: activeZone };
+  const photoInput = document.getElementById('citizenGrvPhoto')?.files?.length ? document.getElementById('citizenGrvPhoto') : document.getElementById('citizenGrvPhoto2');
 
-  fetch(`${API_BASE}/grievances`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${jwt}`,
-      'X-Zone-Id': activeZone
-    },
-    body: JSON.stringify(payload)
-  })
-  .then(async res => {
+  try {
+    let beforePhotoUrl = null;
+    if (photoInput && photoInput.files && photoInput.files.length > 0) {
+      showToast('Uploading photo proof...', 'info', 'Uploading Media');
+      beforePhotoUrl = await uploadPhotoFile(photoInput);
+    }
+
+    const payload = { title, category, location, wardNo, description, beforePhotoUrl, zoneCode: activeZone };
+
+    const res = await fetch(`${API_BASE}/grievances`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+        'X-Zone-Id': activeZone
+      },
+      body: JSON.stringify(payload)
+    });
+
     const data = await res.json().catch(() => ({ message: 'Submission failed' }));
     if (!res.ok) throw new Error(data.message || 'Submission failed');
-    return data;
-  })
-  .then(data => {
+
     showToast(`Grievance Submitted Successfully to ${activeZone} Zone!`, 'success', 'Grievance Filed');
-    
-    ['citizenGrvTitle', 'citizenGrvTitle2', 'citizenGrvLocation', 'citizenGrvLocation2', 'citizenGrvWard', 'citizenGrvWard2', 'citizenGrvDescription', 'citizenGrvDescription2'].forEach(id => {
+
+    ['citizenGrvTitle', 'citizenGrvTitle2', 'citizenGrvLocation', 'citizenGrvLocation2', 'citizenGrvWard', 'citizenGrvWard2', 'citizenGrvDescription', 'citizenGrvDescription2', 'citizenGrvPhoto', 'citizenGrvPhoto2'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
 
     loadDashboardGrievances();
     switchSidebarTab(null, 'overview');
-  })
-  .catch(err => {
+  } catch (err) {
     showToast(err.message || 'Failed to submit grievance', 'error', 'Submission Error');
-  });
+  }
 }
 
-// Update Status Handler (Strict Ward Inspector RBAC)
-function updateGrievanceStatus(id, newStatus) {
-  fetch(`${API_BASE}/grievances/${id}/status`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Zone-Id': activeZone
-    },
-    body: JSON.stringify({ status: newStatus })
-  })
-  .then(async res => {
+// Update Status Handler (Strict Ward Inspector RBAC + Proof Upload)
+async function updateGrievanceStatus(id, newStatus) {
+  try {
+    let afterPhotoUrl = null;
+    const proofInput = document.getElementById('inspectorProofPhotoInput');
+    if (proofInput && proofInput.files && proofInput.files.length > 0) {
+      showToast('Uploading inspector proof photo...', 'info', 'Uploading Proof');
+      afterPhotoUrl = await uploadPhotoFile(proofInput);
+    }
+
+    const res = await fetch(`${API_BASE}/grievances/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Zone-Id': activeZone
+      },
+      body: JSON.stringify({ status: newStatus, afterPhotoUrl })
+    });
+
     if (res.status === 403) {
       showToast('RBAC 403 Forbidden: Status updates are strictly restricted to Ward Inspectors.', 'error', 'Permission Denied');
-      return null;
+      return;
     }
+
     const data = await res.json().catch(() => null);
     if (!res.ok) throw new Error((data && data.message) || 'Update failed');
-    return data;
-  })
-  .then(data => {
-    if (data) {
-      showToast(`Complaint status updated to ${newStatus} successfully!`, 'success', 'Status Updated');
-      loadDashboardGrievances();
-    }
-  })
-  .catch(err => {
+
+    showToast(`Complaint status updated to ${newStatus} successfully!`, 'success', 'Status Updated');
+    if (proofInput) proofInput.value = '';
+    loadDashboardGrievances();
+  } catch (err) {
     showToast(err.message || 'Status update failed', 'error', 'Update Failed');
-  });
+  }
 }
 
 // 7. DYNAMIC SIDEBAR NAVIGATION TAB SWITCHER

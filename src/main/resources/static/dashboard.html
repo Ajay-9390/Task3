@@ -152,6 +152,10 @@
                   </div>
                   <textarea id="citizenGrvDescription" class="form-control" rows="2" placeholder="Describe the civic issue..." required></textarea>
                 </div>
+                <div class="form-group">
+                  <label>📷 Attach Photo Proof (Optional)</label>
+                  <input type="file" id="citizenGrvPhoto" class="form-control" accept="image/*">
+                </div>
                 <div id="aiAnalysisResultBox1" style="display: none; padding: 0.65rem; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 6px; margin-bottom: 0.85rem; font-size: 0.78rem;">
                   <strong style="color: #166534;">🤖 Gemini AI Priority Assessment:</strong>
                   <div id="aiAnalysisText1" style="margin-top: 0.2rem; color: #15803D;"></div>
@@ -225,6 +229,10 @@
             <div class="form-group">
               <label>Detailed Description</label>
               <textarea id="citizenGrvDescription2" class="form-control" rows="4" placeholder="Provide complete details about the civic problem..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label>📷 Attach Photo Proof (Optional)</label>
+              <input type="file" id="citizenGrvPhoto2" class="form-control" accept="image/*">
             </div>
             <button type="submit" class="btn btn-saffron" style="width: 100%;">Submit Grievance to Zone</button>
           </form>
@@ -456,9 +464,29 @@
           <div id="modalGrievanceCitizen" class="modal-value">Ramesh Kumar (citizen.ravi@gmail.com)</div>
         </div>
 
+        <!-- Before & After Photo Attachments Section -->
+        <div class="modal-field" id="modalPhotoFieldSection">
+          <label>📷 Photo Proof & Attachments</label>
+          <div id="modalPhotoContainer" style="display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap;">
+            <div id="beforePhotoCard" style="display: none; flex: 1; min-width: 140px; border: 1px solid #CBD5E0; border-radius: 6px; padding: 0.5rem; background: #FFF;">
+              <span class="badge" style="background: #FEFCBF; color: #744210; font-size: 0.7rem; margin-bottom: 0.4rem; display: inline-block;">📷 Before Repair (Citizen)</span>
+              <a id="modalBeforePhotoLink" href="#" target="_blank"><img id="modalBeforePhotoImg" src="" style="width: 100%; height: 130px; object-fit: cover; border-radius: 4px; border: 1px solid #E2E8F0;"></a>
+            </div>
+            <div id="afterPhotoCard" style="display: none; flex: 1; min-width: 140px; border: 1px solid #CBD5E0; border-radius: 6px; padding: 0.5rem; background: #FFF;">
+              <span class="badge" style="background: #C6F6D5; color: #22543D; font-size: 0.7rem; margin-bottom: 0.4rem; display: inline-block;">✅ After Repair Proof (Inspector)</span>
+              <a id="modalAfterPhotoLink" href="#" target="_blank"><img id="modalAfterPhotoImg" src="" style="width: 100%; height: 130px; object-fit: cover; border-radius: 4px; border: 1px solid #81E6D9;"></a>
+            </div>
+          </div>
+          <div id="noPhotosMsg" style="display: none; font-size: 0.8rem; color: #A0AEC0; font-style: italic; margin-top: 0.2rem;">No photo attachments uploaded for this grievance.</div>
+        </div>
+
         <!-- Status Action Controls for Ward Inspector -->
         <div id="modalInspectorActions" style="display: none; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--ghmc-border);">
           <label style="font-size: 0.85rem; font-weight: 700; color: var(--ghmc-navy); display: block; margin-bottom: 0.5rem;">Update Status (Ward Inspector RBAC):</label>
+          <div style="margin-bottom: 0.75rem; background: #F7FAFC; padding: 0.6rem; border-radius: 6px; border: 1px solid #E2E8F0;">
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--ghmc-navy); display: block; margin-bottom: 0.25rem;">📸 Attach "After Repair" Proof Photo (Optional/Recommended):</label>
+            <input type="file" id="inspectorProofPhotoInput" class="form-control" accept="image/*" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+          </div>
           <div style="display: flex; gap: 0.5rem;">
             <button class="btn btn-outline" style="flex: 1; padding: 0.4rem; font-size: 0.82rem;" onclick="updateModalGrievanceStatus('IN_PROGRESS')">In Progress</button>
             <button class="btn btn-saffron" style="flex: 1; padding: 0.4rem; font-size: 0.82rem;" onclick="updateModalGrievanceStatus('RESOLVED')">Resolved</button>
